@@ -39,9 +39,9 @@ namespace AvaloniaEdit.Demo
         private ComboBox _syntaxModeCombo;
         private TextBlock _statusTextBlock;
         private ElementGenerator _generator = new ElementGenerator();
-        private RegistryOptions _registryOptions;
+        private RegistryOptions _themes;
         private int _currentTheme = (int)ThemeName.DarkPlus;
-        private CustomMargin _customMargin;
+        private CustomMargin _customMargin= new CustomMargin();
 
         public MainWindow()
         {
@@ -76,27 +76,27 @@ namespace AvaloniaEdit.Demo
 
             _textEditor.TextArea.TextView.ElementGenerators.Add(_generator);
 
-            _registryOptions = new RegistryOptions(
+            _themes = new RegistryOptions(
                 (ThemeName)_currentTheme);
 
-            _textMateInstallation = _textEditor.InstallTextMate(_registryOptions);
+            _textMateInstallation = _textEditor.InstallTextMate(_themes);
             
             _textMateInstallation.AppliedTheme += TextMateInstallationOnAppliedTheme;
 
-            Language csharpLanguage = _registryOptions.GetLanguageByExtension(".cs");
+            Language csharpLanguage = _themes.GetLanguageByExtension(".cs");
 
             _syntaxModeCombo = this.FindControl<ComboBox>("syntaxModeCombo");
-            _syntaxModeCombo.ItemsSource = _registryOptions.GetAvailableLanguages();
+            _syntaxModeCombo.ItemsSource = _themes.GetAvailableLanguages();
             _syntaxModeCombo.SelectedItem = csharpLanguage;
             _syntaxModeCombo.SelectionChanged += SyntaxModeCombo_SelectionChanged;
 
-            string scopeName = _registryOptions.GetScopeByLanguageId(csharpLanguage.Id);
+            string scopeName = _themes.GetScopeByLanguageId(csharpLanguage.Id);
 
-            _textEditor.Document = new TextDocument(
-                "// AvaloniaEdit supports displaying control chars: \a or \b or \v" + Environment.NewLine +
-                "// AvaloniaEdit supports displaying underline and strikethrough" + Environment.NewLine +
-                ResourceLoader.LoadSampleFile(scopeName));
-            _textMateInstallation.SetGrammar(_registryOptions.GetScopeByLanguageId(csharpLanguage.Id));
+            // _textEditor.Document = new TextDocument(
+            //     "// AvaloniaEdit supports displaying control chars: \a or \b or \v" + Environment.NewLine +
+            //     "// AvaloniaEdit supports displaying underline and strikethrough" + Environment.NewLine +
+            //     ResourceLoader.LoadSampleFile(scopeName));
+            _textMateInstallation.SetGrammar(_themes.GetScopeByLanguageId(csharpLanguage.Id));
             _textEditor.TextArea.TextView.LineTransformers.Add(new UnderlineAndStrikeThroughTransformer());
 
             _statusTextBlock = this.Find<TextBlock>("StatusText");
@@ -109,10 +109,10 @@ namespace AvaloniaEdit.Demo
             }, RoutingStrategies.Bubble, true);
 
             // Add a custom margin at the left of the text area, which can be clicked.
-            _customMargin = new CustomMargin();
             _textEditor.TextArea.LeftMargins.Insert(0, _customMargin);
             
-            var mainWindowVM = new MainWindowViewModel(_textMateInstallation, _registryOptions);
+            //operate should drive thr data instead
+            var mainWindowVM = new MainWindowViewModel(_textMateInstallation, _themes, _textEditor);
             foreach (ThemeName themeName in Enum.GetValues<ThemeName>())
             {
                 var themeViewModel = new ThemeViewModel(themeName);
@@ -235,10 +235,10 @@ namespace AvaloniaEdit.Demo
                 FoldingManager.Uninstall(_foldingManager);
             }
 
-            string scopeName = _registryOptions.GetScopeByLanguageId(language.Id);
+            string scopeName = _themes.GetScopeByLanguageId(language.Id);
 
             _textMateInstallation.SetGrammar(null);
-            _textEditor.Document = new TextDocument(ResourceLoader.LoadSampleFile(scopeName));
+            //_textEditor.Document = new TextDocument(ResourceLoader.LoadSampleFile(scopeName));
             _textMateInstallation.SetGrammar(scopeName);
 
             if (language.Id == "xml")
